@@ -1,0 +1,57 @@
+name: CI - Build & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── JDK Setup ────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ── Build ─────────────────────────────────────────
+      - name: Compile project
+        run: ./mvnw compile -B -q
+
+      # ── Test ──────────────────────────────────────────
+      - name: Run tests
+        run: ./mvnw test -B
+
+      # ── Package ───────────────────────────────────────
+      - name: Package JAR
+        run: ./mvnw package -DskipTests -B -q
+
+      # ── Upload test reports on failure ────────────────
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
+
+      # ── Upload JAR artifact ───────────────────────────
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+          retention-days: 14
