@@ -27,6 +27,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # ── Fix Maven wrapper permission ──────────────────
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
       # ── Build ─────────────────────────────────────────
       - name: Compile project
         run: ./mvnw compile -B -q
